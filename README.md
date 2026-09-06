@@ -22,6 +22,19 @@ Monaco Grand Prix - starting P1 in wet conditions
   Average lap time        1:24.224
 ```
 
+## At a glance
+
+```mermaid
+flowchart LR
+    A[2014-2016 race data] --> B[Shared feature pipeline]
+    B --> C[Opening tyre strategy]
+    B --> D[Finishing position]
+    B --> E[Average lap time]
+    C --> F[Compare with baselines]
+    D --> F
+    E --> F
+```
+
 ## Results
 
 Every model is scored against the obvious heuristic it has to beat. On a dataset
