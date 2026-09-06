@@ -1,0 +1,64 @@
+{
+  "lap_time": {
+    "n_train": 852,
+    "n_test": 214,
+    "baseline": {
+      "mae": 12.049600973524587,
+      "r2": -0.0012577107241986685
+    },
+    "selected": "random_forest",
+    "selected_on": "mae",
+    "models": {
+      "random_forest": {
+        "mae": 1.2990443560242224,
+        "r2": 0.8971300400143879
+      },
+      "gradient_boosting": {
+        "mae": 2.69391511103546,
+        "r2": 0.8751421699150775
+      }
+    }
+  },
+  "positioning": {
+    "n_train": 809,
+    "n_test": 203,
+    "baseline": {
+      "mae": 2.935960591133005,
+      "r2": 0.3647662814474265
+    },
+    "selected": "random_forest",
+    "selected_on": "mae",
+    "models": {
+      "random_forest": {
+        "mae": 2.594473516269654,
+        "r2": 0.5345252999519594
+      },
+      "gradient_boosting": {
+        "mae": 2.6550492993133763,
+        "r2": 0.5202374416594431
+      }
+    }
+  },
+  "tyre_strategy": {
+    "n_train": 809,
+    "n_test": 203,
+    "baseline": {
+      "accuracy": 0.2413793103448276,
+      "f1_weighted": 0.09386973180076628
+    },
+    "selected": "gradient_boosting",
+    "selected_on": "accuracy",
+    "models": {
+      "random_forest": {
+        "accuracy": 0.6305418719211823,
+        "f1_weighted": 0.6275219508987854,
+        "cv_accuracy": 0.43662878603131244
+      },
+      "gradient_boosting": {
+        "accuracy": 0.6354679802955665,
+        "f1_weighted": 0.6352495529742598,
+        "cv_accuracy": 0.387157976881432
+      }
+    }
+  }
+}
