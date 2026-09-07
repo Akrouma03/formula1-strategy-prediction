@@ -8,6 +8,12 @@ __pycache__/
 .venv/
 venv/
 .pytest_cache/
+.ruff_cache/
+build/
+dist/
+node_modules/
+test-results/
+.playwright-mcp/
 
 # IDE / OS
 .idea/
@@ -17,3 +23,10 @@ Thumbs.db
 
 # Secrets
 .env
+.env.*
+# Private academic material is never part of this public code repository.
+*.docx
+*.doc
+*.pdf
+*.key
+*.pem

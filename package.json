@@ -1,0 +1,19 @@
+{
+  "name": "f1-strategy-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests-js/*.test.js",
+    "test:e2e": "playwright test",
+    "format": "prettier --write docs/*.{js,css,html} tests-js tests-e2e playwright.config.js package.json",
+    "format:check": "prettier --check docs/*.{js,css,html} tests-js tests-e2e playwright.config.js package.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@playwright/test": "1.63.0",
+    "prettier": "3.9.6"
+  }
+}
