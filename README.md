@@ -1,138 +1,165 @@
-# F1 Race Strategy Prediction
+# Pit Window · F1 Strategy Lab
 
-Predicting Formula One race strategy from historical data: what tyres a driver
-opens on, where they finish, and how fast they lap.
+An interactive pit-stop strategy sandbox, a historical race explorer, and a
+machine-learning evaluation that keeps entire seasons apart.
 
-Built on 2014–2016 race data (1,012 driver-races, 1,066 driver-race lap
-summaries) scraped from public sources. Originally a final-year university
-project, since rebuilt around a single shared feature pipeline with baselines,
-tests and reproducible training.
+Built by Akram from a final-year F1 project. The interesting question is not just
+“which model scores highest?” but **what can these data actually support?**
+
+[Open the interactive demo](https://akrouma03.github.io/formula1-strategy-prediction/) ·
+[Methodology](documentation/methodology.md) ·
+[Measured results](reports/metrics.json)
+
+![Pit Window showing editable stint timelines, a cumulative time-gap chart and degradation sensitivity](docs/preview.png)
+
+## Try it in a minute
+
+In the demo, change Strategy B’s first pit lap, move the degradation slider,
+then place a safety-car window over a stop. The cumulative gap shows when a
+strategy pays the cost of a stop and whether fresh tyres recover it.
+
+Three views keep different kinds of evidence separate:
+
+- **Strategy lab:** compare two editable one-/two-stop plans, change dry compounds,
+  pit loss and degradation, inspect sensitivity, and export every simulated lap.
+- **Race explorer:** inspect recorded stints and pit-filtered lap pace for 21
+  events in 2016. Missing records and detected source inconsistencies stay visible.
+- **Model report:** inspect chronological test results, useful baselines,
+  unseen tyre labels and per-race uncertainty.
+
+The simulator is an illustrative single-car model, **not an optimiser or a
+current-F1 prediction service**. Its coefficients are editable assumptions,
+not fitted tyre physics. The three historical ML tasks are evaluated separately.
+
+## Measured results
+
+Candidates train on **2014**, selection uses **2015**, the selected method refits
+on **2014–2015**, and evaluation uses **2016**. Entire events stay together.
+Random Forest, Gradient Boosting and a simple baseline compete; the baseline
+is allowed to win.
+
+| Task | Selected method | 2016 result | Baseline result | Test records |
+|---|---|---:|---:|---:|
+| First two observed stint compounds | Gradient Boosting | 22.3% accuracy | 20.4% | 431 |
+| Finish among classified drivers | Random Forest | 2.74-place MAE | 3.07 places | 382 |
+| Pit-filtered mean lap time | Circuit/condition baseline | 5.47-second MAE | 5.47 seconds | 332 |
+
+Lower MAE is better. Each task covers 21 test events. The tyre baseline uses the
+training-data mode for the circuit/conditions; pace uses the median; finishing
+position uses the grid slot. Circuit-only and global fallbacks handle missing
+combinations.
+
+**What I learned:** 106 of 431 test tyre sequences were absent from the
+development seasons. The selected tyre classifier’s accuracy falls from 46.9%
+on validation to 22.3% on the later season. More model complexity does not solve
+that distribution shift. The pace baseline beating the learned candidates on
+validation is a result worth reporting, not hiding.
+
+These replace earlier random-row results: rows from the same race appeared
+in both train and test, making the old numbers an unsuitable measure of
+future-race performance. The archive has been inspected during development;
+2016 is excluded from candidate selection, not claimed as a pristine blind
+benchmark. [Full protocol and limitations](documentation/methodology.md).
+
+## Run locally
+
+The browser demo needs no API keys, backend, npm installation or model files:
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/Akrouma03/formula1-strategy-prediction.git
+cd formula1-strategy-prediction
+python -m http.server 8000 --bind 127.0.0.1 --directory docs
+```
+
+Open `http://127.0.0.1:8000`. Serve over HTTP; opening `index.html` directly
+will prevent the browser from loading its JSON files.
+
+### Reproduce the Python evaluation
+
+Python **3.10–3.12**:
+
+```bash
+python -m venv .venv
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+
+python -m pip install -e ".[dev]"
 python scripts/train.py
-python scripts/predict.py --race "Monaco Grand Prix" --position 1 --condition Wet
+python scripts/predict.py --race Monaco --position 3 --condition Wet --json
+python scripts/export_demo.py
 ```
 
-```
-Monaco Grand Prix - starting P1 in wet conditions
+Training writes local, ignored `models/*.joblib` bundles and a versioned
+`reports/metrics.json`. Exporting refreshes the demo’s allowlisted JSON data.
+`--task positioning` retrains a single task without erasing the others; source
+or dependency changes require a full retrain.
 
-  Opening tyre strategy   Wet - Intermediate
-  Predicted finish        P2
-  Average lap time        1:24.224
-```
+Prediction deliberately supports **2016 historical scenarios only**. All three
+tasks use the same grid, canonical circuit ID and assumed conditions—never
+predicted finishing position as an input to pace. The bundles retain their
+2014–2015 fit so they remain consistent with the reported evaluation.
 
-## At a glance
+Only load joblib files you built yourself; pickle-based artifacts can execute
+code. If installing a wheel instead of using this checkout, set
+`F1_STRATEGY_ROOT` to the checkout path so the package can locate data and
+write local artifacts.
 
-```mermaid
-flowchart LR
-    A[2014-2016 race data] --> B[Shared feature pipeline]
-    B --> C[Opening tyre strategy]
-    B --> D[Finishing position]
-    B --> E[Average lap time]
-    C --> F[Compare with baselines]
-    D --> F
-    E --> F
-```
-
-## Results
-
-Every model is scored against the obvious heuristic it has to beat. On a dataset
-this small that check matters more than the headline number.
-
-| Task | Model | Score | Baseline | Baseline is |
-|---|---|---|---|---|
-| Average lap time | Random Forest | **MAE 1.30 s** (R² 0.90) | MAE 12.05 s | predict the mean |
-| Finishing position | Random Forest | **MAE 2.59 places** (R² 0.53) | MAE 2.94 | finish where you started |
-| Opening tyre strategy | Gradient Boosting | **63.5 % accuracy** | 24.1 % | always the most common strategy |
-
-Held-out test sets, 20 % split, `random_state=42`. Full numbers in
-[`reports/metrics.json`](reports/metrics.json), regenerated by `scripts/train.py`.
-
-**On the tyre model specifically:** held-out accuracy is 63.5 % but 5-fold
-cross-validated accuracy is 39–44 %. That gap is real and comes from ~800
-training rows spread over 25 classes. The honest reading is that it reliably
-learns the dominant strategies per circuit and is unreliable on rare ones. It is
-not a model I would put near a pit wall.
-
-## What it predicts
-
-**Opening tyre strategy** — the first two stint compounds, e.g. `Super soft - Soft`.
-The full stint sequence gives 163 classes over ~1,000 rows (51 of them appearing
-once), which is not learnable. The opening two stints give 25 classes and match
-the decision a strategist actually commits to before the race.
-
-**Finishing position** — regression from grid slot, circuit, conditions and season.
-
-**Average lap time** — mean green-flag lap time, with pit laps and the laps either
-side of them excluded so the target reflects representative pace.
-
-## Layout
-
-```
-src/f1strategy/
-    data.py      loading, cleaning, feature engineering (one source of truth)
-    models.py    pipelines, training, evaluation against baselines
-    paths.py     canonical file locations
-scripts/
-    train.py     trains every task, saves models/, writes reports/metrics.json
-    predict.py   command-line prediction
-tests/           25 tests, several pinning fixed bugs
-data/raw/        the two source datasets
-```
-
-Preprocessing lives in `data.py` alone, and each model is a scikit-learn
-`Pipeline`, so a saved model carries its own preprocessing. Training and
-prediction cannot drift apart.
-
-## Notes on the rebuild
-
-Three bugs in the original coursework scripts materially changed what the models
-learned. They are fixed here, and each has a regression test:
-
-- **A random number was used as a training feature.** The scripts looked for a
-  `finalPosition` column, did not find it, and filled it with
-  `np.random.randint(1, 20)` — then trained on it as one of three features. The
-  dataset has a real, fully-populated `positionFinish` column, now used instead.
-- **The loaded model was never used.** The tyre-strategy prediction scripts
-  loaded a model and then returned a `value_counts()` lookup over historical
-  rows, ignoring it. Every input produced the same recommendation.
-- **The race name was discarded.** The neural models tokenised the race name and
-  truncated to one token, so every race collapsed to the token for "prix" and
-  carried no signal.
-
-`raceCondition` (Dry/Mix/Wet) was present in the data but unused; it is now a
-feature, and it is what lets a wet Monaco return a wet-weather strategy.
-
-## Limitations
-
-- Three seasons (2014–2016) under one tyre regulation era; it will not
-  generalise to current F1.
-- Predictions are conditioned on circuit, grid slot, conditions and season — not
-  on car performance, team, or in-race events such as safety cars.
-- The tyre model's cross-validated accuracy is well below its held-out accuracy
-  (see above).
-
-## Data
-
-`data/raw/race_data.csv` — one row per driver per race: stint compounds and
-lengths, start/finish positions, circuit metadata, conditions.
-`data/raw/lap_time_data.csv` — one row per driver per lap: lap time, position,
-pit stops.
-
-Both were scraped from public race-results sites for the 2014–2016 seasons and
-are included so results reproduce exactly.
-
-## Development
+## Engineering and verification
 
 ```bash
-pip install -r requirements.txt
-pytest
+python -m ruff check src scripts tests
+python -m ruff format --check src scripts tests
+python scripts/check_public_files.py
+python -m pytest
+python -m build
+npm ci
+npm test
+npm run format:check
+npx playwright install chromium
+npm run test:e2e
 ```
 
-`scikit-learn` is pinned: model pickles are version-sensitive, and mismatched
-versions warn that results may be invalid.
+Tests cover circuit aliases, retiree eligibility, true lap adjacency, invalid
+inputs, held-out season boundaries, artifact round-trips, target isolation,
+export validation, exact simulator arithmetic, CSV output, keyboard navigation,
+mobile layouts and accessibility. CI runs Python on Linux and Windows, then
+checks the real demo in Chromium before Pages can deploy from `main`.
 
-## License
+### Project map
 
-MIT — see [LICENSE](LICENSE).
+```text
+src/f1strategy/     validated data, shared features, evaluation and artifact API
+scripts/           training, historical CLI, browser-data export
+docs/              dependency-free static app + tested simulation engine
+documentation/     methodology and operational notes
+tests/             Python data, model and CLI regression tests
+tests-js/          simulator tests using Node's built-in runner
+tests-e2e/         real-browser behaviour and accessibility tests
+data/raw/          original coursework CSV snapshots (unchanged)
+reports/           generated evaluation JSON, not the academic report
+```
+
+The frontend uses native HTML controls, keyboard-operable tabs, labelled SVG
+charts and local system fonts. No trackers or third-party runtime requests.
+
+## Boundaries and next experiments
+
+This is a small, imperfect 2014–2016 archive, not a complete official timing
+feed. Weather is known retrospectively; using it is a scenario assumption.
+There are no track-status flags, so pit-filtered pace is **not green-flag pace**.
+Car/team performance, traffic, overtaking, tyre inventory and sporting legality
+are outside the simulator. Finishing-position evaluation excludes non-numeric
+finish statuses and does not estimate retirement risk.
+
+A meaningful next version would add documented, licensed, richer timing data;
+reserve a genuinely new season; model retirement separately; and calibrate
+tyre degradation on clean stints before optimising pit windows. These are
+planned experiments, not implemented capabilities.
+
+## Data and license
+
+Code: [MIT](LICENSE). The academic report, credentials and trained pickle files
+are not part of this public repository. Original dataset provenance and
+redistribution terms were not fully recorded; the code license does not relicense
+third-party source material. See [data notes](data/README.md).

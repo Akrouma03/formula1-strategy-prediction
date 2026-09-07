@@ -1,7 +1,9 @@
 """Canonical locations for data, trained models and reports."""
+
+import os
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(os.environ.get("F1_STRATEGY_ROOT", Path(__file__).resolve().parents[2])).resolve()
 
 DATA_DIR = ROOT / "data"
 RAW_DIR = DATA_DIR / "raw"

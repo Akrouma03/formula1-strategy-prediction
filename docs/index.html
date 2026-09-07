@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#142c44" />
+    <meta
+      name="description"
+      content="Compare F1 pit-stop strategies, explore 2016 race observations, and inspect chronological machine-learning evaluation."
+    />
+    <title>Pit Window — F1 Strategy Lab</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./style.css" />
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to strategy lab</a>
+    <header class="masthead">
+      <a class="brand" href="./" aria-label="Pit Window home"
+        ><span class="brand-symbol" aria-hidden="true">P<span>W</span></span
+        ><span>PIT WINDOW<small>F1 STRATEGY LAB</small></span></a
+      >
+      <span class="edition"
+        >A study in race decisions <span>/</span> 2014–2016 archive</span
+      >
+      <a
+        class="source-link"
+        href="https://github.com/Akrouma03/formula1-strategy-prediction"
+        >View source <span aria-hidden="true">↗</span></a
+      >
+    </header>
+    <main id="main">
+      <section class="intro">
+        <div>
+          <p class="eyebrow">HISTORICAL DATA. EXPLICIT ASSUMPTIONS.</p>
+          <h1>Find the time<br /><span>between the stops.</span></h1>
+        </div>
+        <p class="intro-copy">
+          Change a pit lap. Choose a compound. See where a strategy gains
+          time—and where it gives it back.
+        </p>
+      </section>
+      <nav class="tabs" role="tablist" aria-label="Lab views">
+        <button
+          id="tab-lab"
+          class="tab active"
+          role="tab"
+          aria-selected="true"
+          aria-controls="panel-lab"
+        >
+          Strategy lab
+        </button>
+        <button
+          id="tab-explorer"
+          class="tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panel-explorer"
+          tabindex="-1"
+        >
+          Race explorer
+        </button>
+        <button
+          id="tab-models"
+          class="tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panel-models"
+          tabindex="-1"
+        >
+          Model report
+        </button>
+        <span class="tab-note"
+          ><span class="status-dot"></span> Runs in your browser</span
+        >
+      </nav>
+      <div id="load-status" role="status">Loading the historical archive…</div>
+      <noscript
+        ><p>
+          This interactive demo needs JavaScript. The source repository includes
+          the historical data and measured results.
+        </p></noscript
+      >
+      <div id="load-error" class="error" role="alert" hidden></div>
+      <div id="workspace" hidden>
+        <section id="panel-lab" role="tabpanel" aria-labelledby="tab-lab">
+          <div class="workspace">
+            <aside class="controls">
+              <div class="section-heading">
+                <h2>Race setup</h2>
+                <span class="small-tag">SCENARIO</span>
+              </div>
+              <label for="event">Historical reference</label>
+              <select id="event"></select>
+              <div class="race-facts">
+                <div>
+                  <span id="lap-count">—</span><small>OBSERVED LAPS</small>
+                </div>
+                <div>
+                  <span id="reference-pace">—</span
+                  ><small>REFERENCE PACE</small>
+                </div>
+              </div>
+              <p class="helper">
+                Median driver-average pace from the selected event, excluding
+                pit-adjacent laps.
+              </p>
+              <div class="control-divider"></div>
+              <h3>Dry-track assumptions</h3>
+              <div class="range-label">
+                <label for="pit-loss">Pit-lane time loss</label
+                ><output id="pit-loss-value" for="pit-loss">22 s</output>
+              </div>
+              <input
+                id="pit-loss"
+                type="range"
+                min="10"
+                max="40"
+                step="1"
+                value="22"
+              />
+              <div class="range-label">
+                <label for="degradation">Base degradation</label
+                ><output id="degradation-value" for="degradation"
+                  >0.10 s/lap</output
+                >
+              </div>
+              <input
+                id="degradation"
+                type="range"
+                min="0"
+                max="0.3"
+                step="0.01"
+                value="0.10"
+              />
+              <label for="safety-lap">Safety-car scenario</label>
+              <select id="safety-lap">
+                <option value="0">No safety car</option>
+              </select>
+              <p class="helper">
+                A three-lap window halves pit loss. Shared slowdown: 15 s/lap.
+                Fuel effect: 0.03 s/lap.
+              </p>
+              <button id="reset" class="button secondary">
+                Reset comparison
+              </button>
+              <details>
+                <summary>How the simulation works</summary>
+                <p>
+                  Each lap adds reference pace, a compound offset and tyre-age
+                  degradation, then subtracts a fuel effect. Stops add pit loss
+                  and reset tyre age.
+                </p>
+                <p>
+                  Compound offsets: S 0.00, M +0.45, H +0.90 seconds. Wear
+                  factors: S ×1.35, M ×0.85, H ×0.55.
+                </p>
+                <p>
+                  These are illustrative coefficients, not fitted tyre physics.
+                  No traffic, overtaking, tyre inventory or sporting-rule
+                  validation is modelled. Dry compounds are assumed available.
+                </p>
+              </details>
+            </aside>
+            <div class="analysis">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">THE COMPARISON</p>
+                  <h2>Two routes to the flag.</h2>
+                </div>
+                <button id="download" class="button secondary">
+                  Export lap data ↓
+                </button>
+              </div>
+              <p class="helper scenario-note">
+                Dry-track sandbox, using historical pace as a reference. It does
+                not recreate the event’s weather or predict its result.
+              </p>
+              <div id="strategy-editors"></div>
+              <div
+                id="simulation-error"
+                class="error"
+                role="alert"
+                hidden
+              ></div>
+              <div class="chart-panel">
+                <div class="chart-heading">
+                  <div>
+                    <h3>Where the time changes</h3>
+                    <p>Cumulative gap · B minus A · seconds</p>
+                  </div>
+                  <span class="chart-key"
+                    ><i></i> Strategy B relative to A</span
+                  >
+                </div>
+                <svg
+                  id="gap-chart"
+                  viewBox="0 0 880 260"
+                  role="img"
+                  aria-labelledby="gap-title gap-desc"
+                >
+                  <title id="gap-title">Cumulative time difference</title>
+                  <desc id="gap-desc">
+                    The chart loads when the comparison is ready.
+                  </desc>
+                </svg>
+                <div class="chart-caption">
+                  <span>Above zero: A leads</span
+                  ><span>Below zero: B leads</span>
+                </div>
+              </div>
+              <div class="verdict" aria-live="polite" aria-atomic="true">
+                <div>
+                  <span class="eyebrow">UNDER THESE ASSUMPTIONS</span
+                  ><strong id="winner">—</strong>
+                  <p id="outcome">—</p>
+                </div>
+                <div class="sensitivity">
+                  <span>DEGRADATION SENSITIVITY</span
+                  ><strong id="sensitivity">—</strong
+                  ><small
+                    >Final B−A gap at 70–130% of chosen wear.<br />A sensitivity
+                    range, not a confidence interval.</small
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          id="panel-explorer"
+          role="tabpanel"
+          aria-labelledby="tab-explorer"
+          hidden
+        >
+          <div class="explorer-head">
+            <div>
+              <p class="eyebrow">WHAT ACTUALLY HAPPENED</p>
+              <h2>The stint archive.</h2>
+              <p>
+                Recorded compounds and stint lengths, directly from the source
+                dataset.
+              </p>
+            </div>
+            <div>
+              <label for="explore-event">Choose an event</label
+              ><select id="explore-event"></select>
+            </div>
+          </div>
+          <div class="archive-meta" id="archive-meta"></div>
+          <p class="helper" id="archive-quality"></p>
+          <div
+            class="archive-table"
+            tabindex="0"
+            role="region"
+            aria-label="Recorded driver stint table"
+          >
+            <table>
+              <caption id="archive-caption">
+                Recorded driver stints
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Driver</th>
+                  <th scope="col">Grid → finish</th>
+                  <th scope="col">Recorded stint sequence</th>
+                </tr>
+              </thead>
+              <tbody id="stint-rows"></tbody>
+            </table>
+          </div>
+          <p class="helper">
+            Stint bars use recorded lengths, without stretching them to a full
+            race. Missing lengths are marked. “Unclassified” includes
+            non-numeric source finish statuses; it is not a predicted result.
+          </p>
+          <div class="chart-panel archive-chart">
+            <div class="chart-heading">
+              <div>
+                <h3>The shape of the race</h3>
+                <p>
+                  Median recorded lap time across available drivers ·
+                  pit-adjacent laps excluded
+                </p>
+              </div>
+            </div>
+            <svg
+              id="pace-chart"
+              viewBox="0 0 880 260"
+              role="img"
+              aria-label="Historical median pace by lap"
+            ></svg>
+          </div>
+          <p class="helper">
+            Track status is unavailable. Safety-car laps can remain in this
+            series.
+          </p>
+        </section>
+        <section
+          id="panel-models"
+          role="tabpanel"
+          aria-labelledby="tab-models"
+          hidden
+        >
+          <div class="report-intro">
+            <p class="eyebrow">MEASURED, NOT SIMULATED</p>
+            <h2>A harder test.<br />A clearer picture.</h2>
+            <p>
+              Whole races stay together. The model choice is frozen before the
+              final season is evaluated. A baseline can win.
+            </p>
+          </div>
+          <div class="protocol">
+            <div><b>2014</b><span>Train candidates</span></div>
+            <span aria-hidden="true">→</span>
+            <div><b>2015</b><span>Select on validation</span></div>
+            <span aria-hidden="true">→</span>
+            <div><b>2014–15</b><span>Refit selected method</span></div>
+            <span aria-hidden="true">→</span>
+            <div class="test-year"><b>2016</b><span>Held-out season</span></div>
+          </div>
+          <div id="metric-cards" class="metric-cards"></div>
+          <div class="report-notes">
+            <article>
+              <h3>What these scores mean</h3>
+              <p>
+                Models predict an observed opening sequence, finish among
+                classified drivers, or pit-filtered average pace. They do not
+                identify the optimal strategy. The simulator above is a
+                separate, transparent mathematical model.
+              </p>
+            </article>
+            <article>
+              <h3>Where support runs out</h3>
+              <p>
+                Only three historical seasons are available. Tyre labels and
+                regulations change. Race weather is observed retrospectively;
+                conditioning on it is a scenario, not a weather forecast. Rare
+                and unseen tyre sequences remain difficult.
+              </p>
+            </article>
+          </div>
+          <details>
+            <summary>Per-race test results and uncertainty</summary>
+            <p>
+              Intervals resample event-level mean errors or accuracies across
+              1,000 bootstrap draws. They describe variation within this small
+              historical sample, not individual-driver prediction intervals.
+            </p>
+            <div id="per-race-report"></div>
+          </details>
+          <p class="report-link">
+            <a href="./data/metrics.json">Download measured results (JSON) ↗</a>
+            ·
+            <a
+              href="https://github.com/Akrouma03/formula1-strategy-prediction/blob/main/documentation/methodology.md"
+              >Read the methodology ↗</a
+            >
+          </p>
+        </section>
+      </div>
+    </main>
+    <footer>
+      <span>PIT WINDOW <span class="muted">/</span> Built by Akram</span
+      ><span
+        >Independent portfolio project · Historical F1 data · No live
+        timing</span
+      ><a href="https://github.com/Akrouma03/formula1-strategy-prediction"
+        >Code & methodology ↗</a
+      >
+    </footer>
+  </body>
+</html>
