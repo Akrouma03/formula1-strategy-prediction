@@ -1,0 +1,1236 @@
+{
+  "schema_version": 1,
+  "metadata": {
+    "python": "3.12.14",
+    "scikit_learn": "1.4.1.post1",
+    "pandas": "2.2.2",
+    "numpy": "1.26.4",
+    "scipy": "1.17.1",
+    "joblib": "1.4.0",
+    "seed": 42,
+    "training_seasons": [
+      2014,
+      2015
+    ],
+    "evaluation_season": 2016,
+    "source_sha256": {
+      "race_data.csv": "a7e537237258a460dee02423202e497b39cb5f756b375062fbcd74f4181242c6",
+      "lap_time_data.csv": "7ceb8cef770ab756f8ee6ce97d252d0f14124e45e18b28a9fd5875ef4f7ff434"
+    },
+    "pipeline_sha256": {
+      "data.py": "18ce3a9091cfa2e26cf39f92f00f1d31009ef35b3ff11b3e011659cf882e8ab8",
+      "identities.py": "0e65ec3f8b80f59b88d7c7cd1ea9c430b64e9172434ddad9313391974d39bf58",
+      "models.py": "13116a3b83671afbe3eeb92f04ab7bb618003687399d52afa94cbfb68ba867b7"
+    }
+  },
+  "research_sha256": {
+    "src/f1strategy/stints.py": "868b6b5808f67a0bc9a04fb2b38c65fb9e8c13a2f550425e753d4c3ff7a9bb10",
+    "scripts/build_research.py": "a18b6b92ad7ca6a60658671adb1ce168b6b07167008e7c93a2981740b89231b2"
+  },
+  "quality": {
+    "race_rows": 1226,
+    "lap_rows": 59300,
+    "events": 59,
+    "invalid_lap_times": 0,
+    "pit_adjacent_laps": 6713,
+    "joins": {
+      "eligible_driver_races": 1066,
+      "matched_driver_races": 1065,
+      "previous_exact_name_matches": 977,
+      "recovered_by_aliases": 88,
+      "unmatched_records": [
+        {
+          "event_id": "2015:bahrain",
+          "driver_id": "button",
+          "source_driver": "button",
+          "laps": 49
+        }
+      ],
+      "unmapped_names": []
+    },
+    "task_rows": {
+      "tyre_strategy": 1145,
+      "positioning": 1012,
+      "lap_time": 1057
+    },
+    "duplicate_grid_events": [
+      {
+        "event_id": "2014:spain",
+        "slots": [
+          7
+        ]
+      },
+      {
+        "event_id": "2016:abu-dhabi",
+        "slots": [
+          21
+        ]
+      },
+      {
+        "event_id": "2016:bahrain",
+        "slots": [
+          8
+        ]
+      },
+      {
+        "event_id": "2016:brazil",
+        "slots": [
+          3,
+          17
+        ]
+      },
+      {
+        "event_id": "2016:canada",
+        "slots": [
+          4
+        ]
+      },
+      {
+        "event_id": "2016:china",
+        "slots": [
+          10
+        ]
+      },
+      {
+        "event_id": "2016:mexico",
+        "slots": [
+          16
+        ]
+      }
+    ],
+    "source_conflicts": [
+      {
+        "event_id": "2015:bahrain",
+        "driver_id": "button",
+        "finding": "Lap file has timed laps; race file has no matching record. Official classification says DNS.",
+        "action": "Left unmatched and excluded from model rows; no invented grid or stint information.",
+        "reference": "https://www.formula1.com/en/results/2015/races/920/bahrain/race-result"
+      }
+    ]
+  },
+  "stints": {
+    "audit": {
+      "race_records": 1226,
+      "aligned_driver_races": 799,
+      "excluded_driver_races": {
+        "invalid_stint_definition": 20,
+        "no_laps": 139,
+        "not_recorded_dry": 108,
+        "pit_boundaries_disagree": 135,
+        "recorded_distance_disagrees": 25
+      },
+      "short_stints_excluded": 264,
+      "analysed_stints": 2078
+    },
+    "evaluation": {
+      "status": "evaluated",
+      "metric": "MAE of stint slope, seconds/lap of tyre age",
+      "selection_on": "2015 only",
+      "selected": "compound_median",
+      "validation": {
+        "zero_drift": 0.11125941719644025,
+        "compound_median": 0.110317305476403
+      },
+      "test": {
+        "zero_drift": 0.19332723997815374,
+        "compound_median": 0.19435769963486882
+      },
+      "rows": {
+        "train_2014": 817,
+        "validation_2015": 564,
+        "test_2016": 697
+      }
+    },
+    "development": [
+      {
+        "compound": "Hard",
+        "stints": 132,
+        "events": 7,
+        "median": 0.03589743589743613,
+        "q25": -0.001282894736842121,
+        "q75": 0.09999999999999432
+      },
+      {
+        "compound": "Medium",
+        "stints": 459,
+        "events": 19,
+        "median": 0.0,
+        "q25": -0.03901785714285683,
+        "q75": 0.03708333333333341
+      },
+      {
+        "compound": "Soft",
+        "stints": 544,
+        "events": 25,
+        "median": 0.0,
+        "q25": -0.050000000000000384,
+        "q75": 0.05567632850241544
+      },
+      {
+        "compound": "Super soft",
+        "stints": 246,
+        "events": 12,
+        "median": -0.016025641025640386,
+        "q25": -0.10000000000000142,
+        "q75": 0.05419034090909099
+      }
+    ],
+    "test": [
+      {
+        "compound": "Hard",
+        "stints": 47,
+        "events": 3,
+        "median": 0.0,
+        "q25": -0.03042929292929271,
+        "q75": 0.05504201680672284
+      },
+      {
+        "compound": "Medium",
+        "stints": 130,
+        "events": 13,
+        "median": 0.003571428571428707,
+        "q25": -0.017210144927536475,
+        "q75": 0.04273809523809563
+      },
+      {
+        "compound": "Soft",
+        "stints": 334,
+        "events": 17,
+        "median": 0.006366421568627563,
+        "q25": -0.04352678571428575,
+        "q75": 0.06387151451489709
+      },
+      {
+        "compound": "Super soft",
+        "stints": 163,
+        "events": 14,
+        "median": 0.0,
+        "q25": -0.0780303030303029,
+        "q75": 0.08250000000000028
+      },
+      {
+        "compound": "Ultra soft",
+        "stints": 23,
+        "events": 3,
+        "median": 0.0,
+        "q25": -0.02678571428571416,
+        "q75": 0.05625000000000213
+      }
+    ],
+    "events": {
+      "2014:abu-dhabi": [
+        {
+          "compound": "Soft",
+          "stints": 32,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.02544642857142877,
+          "q75": 0.01875000000000071
+        },
+        {
+          "compound": "Super soft",
+          "stints": 11,
+          "events": 1,
+          "median": 0.10000000000000853,
+          "q25": 0.005277777777777478,
+          "q75": 0.12922619047618975
+        }
+      ],
+      "2014:australia": [
+        {
+          "compound": "Medium",
+          "stints": 14,
+          "events": 1,
+          "median": -0.026877705627705358,
+          "q25": -0.06499999999999861,
+          "q75": 0.004411764705882729
+        },
+        {
+          "compound": "Soft",
+          "stints": 30,
+          "events": 1,
+          "median": -0.013392857142856825,
+          "q25": -0.22750000000000048,
+          "q75": 0.01620535714285723
+        }
+      ],
+      "2014:austria": [
+        {
+          "compound": "Soft",
+          "stints": 36,
+          "events": 1,
+          "median": -0.021538461538461572,
+          "q25": -0.04285714285714266,
+          "q75": 0.0
+        },
+        {
+          "compound": "Super soft",
+          "stints": 19,
+          "events": 1,
+          "median": 0.04285714285714245,
+          "q25": -0.018830128205128124,
+          "q75": 0.06666666666666524
+        }
+      ],
+      "2014:bahrain": [
+        {
+          "compound": "Medium",
+          "stints": 17,
+          "events": 1,
+          "median": 0.027500000000000746,
+          "q25": -0.20000000000000284,
+          "q75": 0.09999999999999983
+        },
+        {
+          "compound": "Soft",
+          "stints": 44,
+          "events": 1,
+          "median": 0.09999999999999926,
+          "q25": 0.04000000000000012,
+          "q75": 0.15416666666666826
+        }
+      ],
+      "2014:belgium": [
+        {
+          "compound": "Medium",
+          "stints": 22,
+          "events": 1,
+          "median": 0.04580419580419586,
+          "q25": 0.002500000000000213,
+          "q75": 0.08151785714285723
+        },
+        {
+          "compound": "Soft",
+          "stints": 38,
+          "events": 1,
+          "median": 0.049999999999998934,
+          "q25": 0.0,
+          "q75": 0.1466666666666659
+        }
+      ],
+      "2014:brazil": [
+        {
+          "compound": "Medium",
+          "stints": 52,
+          "events": 1,
+          "median": -0.019166666666666228,
+          "q25": -0.03382352941176462,
+          "q75": 0.0
+        },
+        {
+          "compound": "Soft",
+          "stints": 4,
+          "events": 1,
+          "median": -0.024999999999999762,
+          "q25": -0.1125000000000001,
+          "q75": 0.020000000000000285
+        }
+      ],
+      "2014:britain": [
+        {
+          "compound": "Hard",
+          "stints": 6,
+          "events": 1,
+          "median": -0.0019474637681164107,
+          "q25": -0.022916666666666696,
+          "q75": 0.0781929347826044
+        },
+        {
+          "compound": "Medium",
+          "stints": 9,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.019999999999999574,
+          "q75": 0.03333333333333302
+        }
+      ],
+      "2014:canada": [
+        {
+          "compound": "Soft",
+          "stints": 32,
+          "events": 1,
+          "median": -0.027272727272727015,
+          "q25": -0.06309523809523847,
+          "q75": 0.0009259259259258733
+        },
+        {
+          "compound": "Super soft",
+          "stints": 17,
+          "events": 1,
+          "median": -4.7965277777777775,
+          "q25": -5.070555555555556,
+          "q75": -3.532692307692308
+        }
+      ],
+      "2014:china": [
+        {
+          "compound": "Medium",
+          "stints": 1,
+          "events": 1,
+          "median": 0.09999999999999905,
+          "q25": 0.09999999999999905,
+          "q75": 0.09999999999999905
+        },
+        {
+          "compound": "Soft",
+          "stints": 1,
+          "events": 1,
+          "median": -0.1,
+          "q25": -0.1,
+          "q75": -0.1
+        }
+      ],
+      "2014:germany": [
+        {
+          "compound": "Soft",
+          "stints": 37,
+          "events": 1,
+          "median": 0.049999999999998934,
+          "q25": 0.019999999999999574,
+          "q75": 0.0611111111111108
+        },
+        {
+          "compound": "Super soft",
+          "stints": 30,
+          "events": 1,
+          "median": 0.02833333333333425,
+          "q25": -0.013068181818182449,
+          "q75": 0.17745535714285693
+        }
+      ],
+      "2014:italy": [
+        {
+          "compound": "Hard",
+          "stints": 21,
+          "events": 1,
+          "median": -0.01111111111111048,
+          "q25": -0.03636363636363688,
+          "q75": 0.011111111111112059
+        },
+        {
+          "compound": "Medium",
+          "stints": 22,
+          "events": 1,
+          "median": -0.009821428571428013,
+          "q25": -0.0343750000000006,
+          "q75": 0.0
+        }
+      ],
+      "2014:malaysia": [
+        {
+          "compound": "Hard",
+          "stints": 18,
+          "events": 1,
+          "median": 0.06937229437229511,
+          "q25": 0.007142857142856737,
+          "q75": 0.1288690476190455
+        },
+        {
+          "compound": "Medium",
+          "stints": 49,
+          "events": 1,
+          "median": 0.01666666666666809,
+          "q25": -0.05000000000000426,
+          "q75": 0.07928571428571393
+        }
+      ],
+      "2014:monaco": [
+        {
+          "compound": "Soft",
+          "stints": 16,
+          "events": 1,
+          "median": -0.024014336917562835,
+          "q25": -0.11727272727272761,
+          "q75": 0.01130952380952397
+        },
+        {
+          "compound": "Super soft",
+          "stints": 21,
+          "events": 1,
+          "median": -0.05000000000000044,
+          "q25": -0.13636363636363635,
+          "q75": 0.01666666666666572
+        }
+      ],
+      "2014:russia": [
+        {
+          "compound": "Medium",
+          "stints": 19,
+          "events": 1,
+          "median": -0.07333333333333296,
+          "q25": -0.1029761904761908,
+          "q75": -0.041780303030302904
+        },
+        {
+          "compound": "Soft",
+          "stints": 21,
+          "events": 1,
+          "median": -0.07142857142857142,
+          "q25": -0.1083333333333331,
+          "q75": -0.055902777777777954
+        }
+      ],
+      "2014:singapore": [
+        {
+          "compound": "Soft",
+          "stints": 21,
+          "events": 1,
+          "median": 0.07499999999999929,
+          "q25": -0.013657407407407157,
+          "q75": 0.10000000000000142
+        },
+        {
+          "compound": "Super soft",
+          "stints": 43,
+          "events": 1,
+          "median": 0.04142857142857151,
+          "q25": -0.025000000000000355,
+          "q75": 0.10000000000000309
+        }
+      ],
+      "2014:spain": [
+        {
+          "compound": "Hard",
+          "stints": 22,
+          "events": 1,
+          "median": 0.04982517482517422,
+          "q25": 0.0202083333333339,
+          "q75": 0.09761363636363554
+        },
+        {
+          "compound": "Medium",
+          "stints": 48,
+          "events": 1,
+          "median": 0.012599206349206141,
+          "q25": -0.014880952380951535,
+          "q75": 0.034375000000000266
+        }
+      ],
+      "2014:united-states": [
+        {
+          "compound": "Medium",
+          "stints": 25,
+          "events": 1,
+          "median": -0.008571428571428794,
+          "q25": -0.050000000000000114,
+          "q75": 0.00833333333333286
+        },
+        {
+          "compound": "Soft",
+          "stints": 19,
+          "events": 1,
+          "median": -0.12500000000000105,
+          "q25": -0.5154166666666686,
+          "q75": 0.09499999999999745
+        }
+      ],
+      "2015:abu-dhabi": [
+        {
+          "compound": "Soft",
+          "stints": 30,
+          "events": 1,
+          "median": 0.04833333333333302,
+          "q25": 0.010176282051281472,
+          "q75": 0.06562499999999982
+        },
+        {
+          "compound": "Super soft",
+          "stints": 7,
+          "events": 1,
+          "median": 0.15,
+          "q25": 0.09090909090909188,
+          "q75": 0.18874999999999834
+        }
+      ],
+      "2015:australia": [
+        {
+          "compound": "Medium",
+          "stints": 9,
+          "events": 1,
+          "median": -0.02105263157894692,
+          "q25": -0.033333333333332035,
+          "q75": -0.009090909090908574
+        },
+        {
+          "compound": "Soft",
+          "stints": 13,
+          "events": 1,
+          "median": -0.05454545454545532,
+          "q25": -0.07499999999999929,
+          "q75": 0.05634920634920574
+        }
+      ],
+      "2015:austria": [
+        {
+          "compound": "Soft",
+          "stints": 14,
+          "events": 1,
+          "median": -0.006092592592592783,
+          "q25": -0.028947368421051174,
+          "q75": 0.0
+        },
+        {
+          "compound": "Super soft",
+          "stints": 14,
+          "events": 1,
+          "median": -0.043750000000000774,
+          "q25": -0.2062500000000007,
+          "q75": -0.008514492753623528
+        }
+      ],
+      "2015:belgium": [
+        {
+          "compound": "Medium",
+          "stints": 15,
+          "events": 1,
+          "median": 0.02916666666666708,
+          "q25": -0.018750000000000412,
+          "q75": 0.05628205128205171
+        },
+        {
+          "compound": "Soft",
+          "stints": 27,
+          "events": 1,
+          "median": 0.14285714285714285,
+          "q25": 0.023809523809523753,
+          "q75": 0.19188311688311632
+        }
+      ],
+      "2015:brazil": [
+        {
+          "compound": "Medium",
+          "stints": 33,
+          "events": 1,
+          "median": 0.020000000000001704,
+          "q25": 0.0,
+          "q75": 0.033333333333333805
+        },
+        {
+          "compound": "Soft",
+          "stints": 24,
+          "events": 1,
+          "median": -0.004356060606060358,
+          "q25": -0.05125000000000307,
+          "q75": 0.030208333333333837
+        }
+      ],
+      "2015:canada": [
+        {
+          "compound": "Soft",
+          "stints": 17,
+          "events": 1,
+          "median": -0.009999999999999787,
+          "q25": -0.02307692307692368,
+          "q75": 0.0
+        },
+        {
+          "compound": "Super soft",
+          "stints": 16,
+          "events": 1,
+          "median": -0.019999999999999574,
+          "q25": -0.031770833333333054,
+          "q75": -0.013573762838468631
+        }
+      ],
+      "2015:hungary": [
+        {
+          "compound": "Soft",
+          "stints": 2,
+          "events": 1,
+          "median": -0.010796703296703545,
+          "q25": -0.020041208791208943,
+          "q75": -0.0015521978021981455
+        }
+      ],
+      "2015:italy": [
+        {
+          "compound": "Medium",
+          "stints": 15,
+          "events": 1,
+          "median": -0.012499999999999734,
+          "q25": -0.034239130434782786,
+          "q75": -0.004880952380952272
+        },
+        {
+          "compound": "Soft",
+          "stints": 14,
+          "events": 1,
+          "median": 0.02250000000000091,
+          "q25": -0.012500000000000178,
+          "q75": 0.03863095238095316
+        }
+      ],
+      "2015:japan": [
+        {
+          "compound": "Hard",
+          "stints": 25,
+          "events": 1,
+          "median": 0.044444444444443496,
+          "q25": 0.009090909090908574,
+          "q75": 0.08000000000000114
+        },
+        {
+          "compound": "Medium",
+          "stints": 25,
+          "events": 1,
+          "median": 0.049999999999999226,
+          "q25": -0.011111111111112059,
+          "q75": 0.07500000000000284
+        }
+      ],
+      "2015:malaysia": [
+        {
+          "compound": "Hard",
+          "stints": 23,
+          "events": 1,
+          "median": 0.06153846153846187,
+          "q25": 0.029374999999999485,
+          "q75": 0.11583333333333315
+        },
+        {
+          "compound": "Medium",
+          "stints": 24,
+          "events": 1,
+          "median": 0.026547619047619583,
+          "q25": -0.017187500000000133,
+          "q75": 0.08404761904761918
+        }
+      ],
+      "2015:mexico": [
+        {
+          "compound": "Medium",
+          "stints": 22,
+          "events": 1,
+          "median": -0.048809523809523914,
+          "q25": -0.08750000000000036,
+          "q75": -0.03124358974358941
+        },
+        {
+          "compound": "Soft",
+          "stints": 20,
+          "events": 1,
+          "median": -0.08750000000000036,
+          "q25": -0.195681818181818,
+          "q75": 0.010000000000000142
+        }
+      ],
+      "2015:monaco": [
+        {
+          "compound": "Soft",
+          "stints": 16,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.005000000000000249,
+          "q75": 0.012938896488827997
+        },
+        {
+          "compound": "Super soft",
+          "stints": 25,
+          "events": 1,
+          "median": -0.028571428571428976,
+          "q25": -0.21999999999999886,
+          "q75": -0.0076923076923083485
+        }
+      ],
+      "2015:russia": [
+        {
+          "compound": "Soft",
+          "stints": 15,
+          "events": 1,
+          "median": -0.0763888888888887,
+          "q25": -0.11833333333333308,
+          "q75": -0.041666666666667254
+        },
+        {
+          "compound": "Super soft",
+          "stints": 15,
+          "events": 1,
+          "median": -0.10666666666666723,
+          "q25": -0.45833333333333215,
+          "q75": -0.07083333333333344
+        }
+      ],
+      "2015:singapore": [
+        {
+          "compound": "Soft",
+          "stints": 21,
+          "events": 1,
+          "median": -0.011764705882353108,
+          "q25": -0.10000000000000142,
+          "q75": 0.02500000000000213
+        },
+        {
+          "compound": "Super soft",
+          "stints": 28,
+          "events": 1,
+          "median": -0.03999999999999915,
+          "q25": -0.1293055555555556,
+          "q75": 0.04550438596491415
+        }
+      ],
+      "2015:spain": [
+        {
+          "compound": "Hard",
+          "stints": 17,
+          "events": 1,
+          "median": 0.016666666666667496,
+          "q25": -0.014285714285713982,
+          "q75": 0.05833333333333357
+        },
+        {
+          "compound": "Medium",
+          "stints": 38,
+          "events": 1,
+          "median": 0.007499999999999574,
+          "q25": -0.0750000000000007,
+          "q75": 0.04432975113122181
+        }
+      ],
+      "2016:abu-dhabi": [
+        {
+          "compound": "Soft",
+          "stints": 28,
+          "events": 1,
+          "median": 0.024603174603174755,
+          "q25": -0.02412587412587472,
+          "q75": 0.07160027472527455
+        },
+        {
+          "compound": "Super soft",
+          "stints": 6,
+          "events": 1,
+          "median": 0.07305555555555654,
+          "q25": 0.013068181818182449,
+          "q75": 0.14887152777777857
+        },
+        {
+          "compound": "Ultra soft",
+          "stints": 1,
+          "events": 1,
+          "median": 0.29999999999999716,
+          "q25": 0.29999999999999716,
+          "q75": 0.29999999999999716
+        }
+      ],
+      "2016:australia": [
+        {
+          "compound": "Medium",
+          "stints": 7,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.013958810068650084,
+          "q75": 0.013514610389610267
+        },
+        {
+          "compound": "Soft",
+          "stints": 6,
+          "events": 1,
+          "median": 0.04188311688311776,
+          "q25": -0.005990259740261116,
+          "q75": 0.07193181818181957
+        },
+        {
+          "compound": "Super soft",
+          "stints": 8,
+          "events": 1,
+          "median": 0.04047619047618928,
+          "q25": 0.0,
+          "q75": 0.1892857142857132
+        }
+      ],
+      "2016:austria": [
+        {
+          "compound": "Super soft",
+          "stints": 1,
+          "events": 1,
+          "median": -0.00277777777777762,
+          "q25": -0.00277777777777762,
+          "q75": -0.00277777777777762
+        }
+      ],
+      "2016:azerbaijan": [
+        {
+          "compound": "Medium",
+          "stints": 2,
+          "events": 1,
+          "median": -0.045314009661835804,
+          "q25": -0.045990338164251326,
+          "q75": -0.04463768115942028
+        },
+        {
+          "compound": "Soft",
+          "stints": 18,
+          "events": 1,
+          "median": -0.0038461538461541742,
+          "q25": -0.047727272727272944,
+          "q75": 0.019687499999999282
+        },
+        {
+          "compound": "Super soft",
+          "stints": 9,
+          "events": 1,
+          "median": -0.09999999999999944,
+          "q25": -0.14999999999999908,
+          "q75": -0.018181818181817147
+        }
+      ],
+      "2016:bahrain": [
+        {
+          "compound": "Medium",
+          "stints": 9,
+          "events": 1,
+          "median": 0.08660714285714263,
+          "q25": 0.04444444444444508,
+          "q75": 0.13541666666666607
+        },
+        {
+          "compound": "Soft",
+          "stints": 19,
+          "events": 1,
+          "median": 0.12000000000000029,
+          "q25": 0.0641025641025621,
+          "q75": 0.15366161616161747
+        },
+        {
+          "compound": "Super soft",
+          "stints": 19,
+          "events": 1,
+          "median": 0.2166666666666662,
+          "q25": 0.06583333333333326,
+          "q75": 0.2705357142857163
+        }
+      ],
+      "2016:belgium": [
+        {
+          "compound": "Medium",
+          "stints": 8,
+          "events": 1,
+          "median": 0.06187499999999986,
+          "q25": 0.028124999999999734,
+          "q75": 0.9781250000000006
+        },
+        {
+          "compound": "Soft",
+          "stints": 7,
+          "events": 1,
+          "median": 0.06666666666666761,
+          "q25": -0.005000000000001496,
+          "q75": 3.1999999999999993
+        }
+      ],
+      "2016:canada": [
+        {
+          "compound": "Soft",
+          "stints": 23,
+          "events": 1,
+          "median": -0.005555555555556029,
+          "q25": -0.02080659536541892,
+          "q75": 0.016233766233766465
+        },
+        {
+          "compound": "Super soft",
+          "stints": 4,
+          "events": 1,
+          "median": -0.03500000000000121,
+          "q25": -0.08511904761904815,
+          "q75": -0.013750000000001348
+        },
+        {
+          "compound": "Ultra soft",
+          "stints": 21,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.028571428571427963,
+          "q75": 0.04396135265700515
+        }
+      ],
+      "2016:china": [
+        {
+          "compound": "Medium",
+          "stints": 20,
+          "events": 1,
+          "median": 0.02071428571428611,
+          "q25": -0.01107142857142845,
+          "q75": 0.047930402930403085
+        },
+        {
+          "compound": "Soft",
+          "stints": 30,
+          "events": 1,
+          "median": 0.030833333333333376,
+          "q25": -0.24999999999999853,
+          "q75": 0.23123737373737324
+        },
+        {
+          "compound": "Super soft",
+          "stints": 6,
+          "events": 1,
+          "median": 0.2800000000000017,
+          "q25": 0.1937499999999992,
+          "q75": 0.4025000000000006
+        }
+      ],
+      "2016:germany": [
+        {
+          "compound": "Soft",
+          "stints": 26,
+          "events": 1,
+          "median": 0.04375000000000018,
+          "q25": 0.022142857142857485,
+          "q75": 0.06666666666666687
+        },
+        {
+          "compound": "Super soft",
+          "stints": 38,
+          "events": 1,
+          "median": 0.049999999999998934,
+          "q25": -0.009375000000000133,
+          "q75": 0.07895833333333378
+        }
+      ],
+      "2016:hungary": [
+        {
+          "compound": "Medium",
+          "stints": 2,
+          "events": 1,
+          "median": -0.01466420807453439,
+          "q25": -0.02913916925465832,
+          "q75": -0.0001892468944104577
+        },
+        {
+          "compound": "Soft",
+          "stints": 32,
+          "events": 1,
+          "median": -0.03179268648018587,
+          "q25": -0.05594561688311632,
+          "q75": 0.0010208333333332753
+        },
+        {
+          "compound": "Super soft",
+          "stints": 19,
+          "events": 1,
+          "median": -0.08333333333333333,
+          "q25": -0.12227564102564045,
+          "q75": -0.020000000000000285
+        }
+      ],
+      "2016:italy": [
+        {
+          "compound": "Medium",
+          "stints": 3,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.010000000000000023,
+          "q75": 0.004545454545454287
+        },
+        {
+          "compound": "Soft",
+          "stints": 23,
+          "events": 1,
+          "median": 0.008391608391609108,
+          "q25": -0.0067857142857139004,
+          "q75": 0.028219696969696558
+        },
+        {
+          "compound": "Super soft",
+          "stints": 20,
+          "events": 1,
+          "median": -0.011764705882353108,
+          "q25": -0.04113636363636511,
+          "q75": 0.0
+        }
+      ],
+      "2016:japan": [
+        {
+          "compound": "Hard",
+          "stints": 28,
+          "events": 1,
+          "median": 0.019337606837606977,
+          "q25": -0.001470588235294243,
+          "q75": 0.05764880952381002
+        },
+        {
+          "compound": "Medium",
+          "stints": 8,
+          "events": 1,
+          "median": 0.002380952380952584,
+          "q25": -0.0019230769230768137,
+          "q75": 0.007903171390013897
+        },
+        {
+          "compound": "Soft",
+          "stints": 18,
+          "events": 1,
+          "median": 0.11458333333333393,
+          "q25": 0.0500000000000016,
+          "q75": 0.20000000000000018
+        }
+      ],
+      "2016:malaysia": [
+        {
+          "compound": "Hard",
+          "stints": 17,
+          "events": 1,
+          "median": -0.027525252525252397,
+          "q25": -0.0500000000000019,
+          "q75": 0.0
+        },
+        {
+          "compound": "Medium",
+          "stints": 4,
+          "events": 1,
+          "median": -0.05192307692307684,
+          "q25": -0.05646416083916029,
+          "q75": -0.045833333333333684
+        },
+        {
+          "compound": "Soft",
+          "stints": 25,
+          "events": 1,
+          "median": -0.014285714285713473,
+          "q25": -0.1083333333333331,
+          "q75": 0.02222222222222254
+        }
+      ],
+      "2016:mexico": [
+        {
+          "compound": "Medium",
+          "stints": 19,
+          "events": 1,
+          "median": -0.012121212121212293,
+          "q25": -0.0226495726495727,
+          "q75": -0.006397306397306034
+        },
+        {
+          "compound": "Soft",
+          "stints": 16,
+          "events": 1,
+          "median": -0.034090909090908394,
+          "q25": -0.18000000000000255,
+          "q75": 0.0
+        },
+        {
+          "compound": "Super soft",
+          "stints": 8,
+          "events": 1,
+          "median": 0.0,
+          "q25": -0.06874999999999787,
+          "q75": 0.06439393939393982
+        }
+      ],
+      "2016:russia": [
+        {
+          "compound": "Medium",
+          "stints": 2,
+          "events": 1,
+          "median": -0.10367647058823504,
+          "q25": -0.11433823529411752,
+          "q75": -0.09301470588235257
+        },
+        {
+          "compound": "Soft",
+          "stints": 16,
+          "events": 1,
+          "median": -0.04342857142857111,
+          "q25": -0.05150000000000237,
+          "q75": -0.02625000000000002
+        },
+        {
+          "compound": "Super soft",
+          "stints": 16,
+          "events": 1,
+          "median": -0.10741758241758659,
+          "q25": -0.19166666666666465,
+          "q75": -0.07121212121212106
+        }
+      ],
+      "2016:singapore": [
+        {
+          "compound": "Soft",
+          "stints": 4,
+          "events": 1,
+          "median": 0.0235294117647058,
+          "q25": -0.015767045454545485,
+          "q75": 0.11029411764705799
+        },
+        {
+          "compound": "Super soft",
+          "stints": 2,
+          "events": 1,
+          "median": -0.013214285714286483,
+          "q25": -0.09660714285714381,
+          "q75": 0.07017857142857084
+        },
+        {
+          "compound": "Ultra soft",
+          "stints": 1,
+          "events": 1,
+          "median": 0.2999999999999995,
+          "q25": 0.2999999999999995,
+          "q75": 0.2999999999999995
+        }
+      ],
+      "2016:spain": [
+        {
+          "compound": "Hard",
+          "stints": 2,
+          "events": 1,
+          "median": 0.0881818181818186,
+          "q25": 0.08727272727272761,
+          "q75": 0.08909090909090958
+        },
+        {
+          "compound": "Medium",
+          "stints": 28,
+          "events": 1,
+          "median": 0.034848484848484615,
+          "q25": 0.007348901098901726,
+          "q75": 0.06121323529411823
+        },
+        {
+          "compound": "Soft",
+          "stints": 23,
+          "events": 1,
+          "median": -0.31666666666667,
+          "q25": -5.960000000000006,
+          "q75": 0.07249999999999979
+        }
+      ],
+      "2016:united-states": [
+        {
+          "compound": "Medium",
+          "stints": 18,
+          "events": 1,
+          "median": -0.009334733893557563,
+          "q25": -0.04435314685314653,
+          "q75": 0.022576121794871805
+        },
+        {
+          "compound": "Soft",
+          "stints": 20,
+          "events": 1,
+          "median": 0.02784090909090904,
+          "q25": -0.0027777777777780147,
+          "q75": 0.08124999999999805
+        },
+        {
+          "compound": "Super soft",
+          "stints": 7,
+          "events": 1,
+          "median": -0.025000000000000355,
+          "q25": -0.11250000000000071,
+          "q75": -0.00833333333333286
+        }
+      ]
+    },
+    "decision": "Descriptive pace drift only; simulator wear coefficients remain illustrative.",
+    "limitations": [
+      "Exact recorded pit boundaries and distance required; this selects a cleaner subset, not all drivers.",
+      "Six usable laps minimum; exclude first race lap, pit laps and physical neighbours.",
+      "Median pairwise slope limits outlier influence but does not identify safety-car laps.",
+      "Fuel burn, traffic, car/driver pace and track status confound tyre wear; no causal calibration.",
+      "Compound names are not a fixed physical specification across seasons or events.",
+      "Quartiles show spread across stints, not confidence intervals. Archive inspected retrospectively."
+    ]
+  }
+}

@@ -70,6 +70,16 @@
         >
           Model report
         </button>
+        <button
+          id="tab-research"
+          class="tab"
+          role="tab"
+          aria-selected="false"
+          aria-controls="panel-research"
+          tabindex="-1"
+        >
+          Data & research
+        </button>
         <span class="tab-note"
           ><span class="status-dot"></span> Runs in your browser</span
         >
@@ -160,6 +170,9 @@
                   No traffic, overtaking, tyre inventory or sporting-rule
                   validation is modelled. Dry compounds are assumed available.
                 </p>
+                <button id="view-evidence" class="button secondary">
+                  See measured stint evidence
+                </button>
               </details>
             </aside>
             <div class="analysis">
@@ -295,6 +308,20 @@
             Track status is unavailable. Safety-car laps can remain in this
             series.
           </p>
+          <section class="stint-study" aria-labelledby="stint-study-heading">
+            <p class="eyebrow">MEASURED STINT BEHAVIOUR</p>
+            <h3 id="stint-study-heading">
+              Pace drift is not the same as tyre wear.
+            </h3>
+            <p id="stint-study-context"></p>
+            <div id="stint-study-table"></div>
+            <p class="helper">
+              Median within-stint slope in seconds per lap of tyre age. Negative
+              means laps got faster; positive means slower. Fuel, traffic and
+              track status remain confounders. Quartiles describe the spread of
+              stints, not uncertainty in a tyre-wear estimate.
+            </p>
+          </section>
         </section>
         <section
           id="panel-models"
@@ -320,6 +347,15 @@
             <div class="test-year"><b>2016</b><span>Held-out season</span></div>
           </div>
           <div id="metric-cards" class="metric-cards"></div>
+          <details class="candidate-comparison">
+            <summary>Compare every candidate on the same seasons</summary>
+            <p>
+              Selection uses 2015 only. All candidates are then refitted on
+              2014–2015 and scored on the same 2016 records. A better test score
+              does not change the frozen choice.
+            </p>
+            <div id="candidate-results"></div>
+          </details>
           <div class="report-notes">
             <article>
               <h3>What these scores mean</h3>
@@ -355,6 +391,96 @@
             <a
               href="https://github.com/Akrouma03/formula1-strategy-prediction/blob/main/documentation/methodology.md"
               >Read the methodology ↗</a
+            >
+          </p>
+        </section>
+        <section
+          id="panel-research"
+          role="tabpanel"
+          aria-labelledby="tab-research"
+          hidden
+        >
+          <div class="report-intro">
+            <p class="eyebrow">
+              FROM MANUALLY CLEANED FILES TO AUDITABLE RESULTS
+            </p>
+            <h2>The work behind the data.</h2>
+            <p>
+              I manually cleaned the original archive. I've kept those snapshots
+              unchanged and added explicit identities, version tracking and
+              reproducible checks.
+            </p>
+          </div>
+          <div class="research-layout">
+            <article class="join-study" aria-labelledby="join-heading">
+              <p class="eyebrow">DRIVER–RACE RECONCILIATION</p>
+              <h3 id="join-heading">Make the missing matches visible.</h3>
+              <div id="join-evidence"></div>
+            </article>
+            <article class="curation-note">
+              <h3>Preserved, not overwritten.</h3>
+              <p id="catalogue-summary"></p>
+              <p>
+                I kept the two public snapshots byte-identical to my original
+                files. I treat duplicate exports as versions, not extra
+                observations. My private workbooks stay outside the repository.
+              </p>
+              <p>
+                I don't have a complete log of every original manual edit. In
+                the case study, I explain my cleaning work, what I can verify
+                from the files and the automated checks I've added.
+              </p>
+              <a
+                href="https://github.com/Akrouma03/formula1-strategy-prediction/blob/main/documentation/data-case-study.md"
+                >Read my data-cleaning case study ↗</a
+              >
+            </article>
+          </div>
+          <section class="research-section" aria-labelledby="richer-heading">
+            <h3 id="richer-heading">More columns need better provenance.</h3>
+            <p id="richer-summary"></p>
+            <p>
+              Season and event identity must be recovered before joining
+              weather, sector times or compounds. Removing duplicate rows
+              without that context could discard different seasons'
+              observations.
+            </p>
+          </section>
+          <section class="research-section" aria-labelledby="drift-heading">
+            <h3 id="drift-heading">Testing a measured pace trend.</h3>
+            <div id="drift-evaluation"></div>
+            <p>
+              The compound-median lookup was selected on 2015, then assessed on
+              2016. These are retrospective pace trends, not a causal tyre
+              model. The strategy lab therefore keeps its coefficients
+              illustrative. Event-specific observations are in the Race
+              explorer.
+            </p>
+          </section>
+          <section class="research-section" aria-labelledby="legacy-heading">
+            <h3 id="legacy-heading">
+              Where the neural-network experiments fit.
+            </h3>
+            <p>
+              The original LSTM and GRU work is part of the research history.
+              The inspected experiments are excluded from the comparable
+              benchmark until their evaluation and sequence inputs are rebuilt.
+            </p>
+            <div id="legacy-experiments"></div>
+            <a
+              href="https://github.com/Akrouma03/formula1-strategy-prediction/blob/main/experiments/README.md"
+              >Read the experiment audit ↗</a
+            >
+          </section>
+          <details>
+            <summary>Inspect the source catalogue and exclusions</summary>
+            <div id="source-catalogue"></div>
+            <h3>Stint-study exclusions</h3>
+            <div id="stint-exclusions"></div>
+          </details>
+          <p class="report-link">
+            <a href="./data/research.json"
+              >Download data audit and research results (JSON) ↗</a
             >
           </p>
         </section>
