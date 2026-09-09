@@ -146,10 +146,13 @@ test("release loads without relying on stale unversioned entrypoints or data", a
   page,
 }) => {
   const staleRequests = [];
-  await page.route(/\/(app\.js|style\.css|data\/.*\.json)$/, (route) => {
-    staleRequests.push(route.request().url());
-    return route.fulfill({ status: 410, body: "Previous release" });
-  });
+  await page.route(
+    /\/((app|research|simulator)\.js|style\.css|data\/.*\.json)$/,
+    (route) => {
+      staleRequests.push(route.request().url());
+      return route.fulfill({ status: 410, body: "Previous release" });
+    },
+  );
   await page.reload();
   await expect(page.locator("#workspace")).toBeVisible();
   await page.getByRole("tab", { name: "Data & research" }).click();
