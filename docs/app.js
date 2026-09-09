@@ -1,5 +1,14 @@
-import { COMPOUNDS, compare, exportCSV, formatTime } from "./simulator.js";
-import { renderResearch, renderStints, renderCandidates } from "./research.js";
+import {
+  COMPOUNDS,
+  compare,
+  exportCSV,
+  formatTime,
+} from "./simulator.js?v=2.1.0";
+import {
+  renderResearch,
+  renderStints,
+  renderCandidates,
+} from "./research.js?v=2.1.0";
 
 const $ = (id) => document.getElementById(id);
 const escape = (value) =>
@@ -511,7 +520,7 @@ function renderMetrics() {
 async function start() {
   const responses = await Promise.all(
     ["./data/events.json", "./data/metrics.json", "./data/research.json"].map(
-      (path) => fetch(path),
+      (path) => fetch(path + "?v=2.1.0"),
     ),
   );
   if (responses.some((r) => !r.ok))
