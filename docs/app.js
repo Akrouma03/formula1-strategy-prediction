@@ -1,4 +1,5 @@
 import { COMPOUNDS, compare, exportCSV, formatTime } from "./simulator.js";
+import { renderResearch, renderStints, renderCandidates } from "./research.js";
 
 const $ = (id) => document.getElementById(id);
 const escape = (value) =>
@@ -10,11 +11,11 @@ const escape = (value) =>
       ],
   );
 const signed = (value) => (value > 0 ? "+" : "") + value.toFixed(1);
-let archive, metrics, event, strategies, result;
+let archive, metrics, research, event, strategies, result;
 const colour = (compound) => "compound-" + compound.replaceAll(" ", "-");
 
 function setTab(name, focus = false) {
-  for (const item of ["lab", "explorer", "models"]) {
+  for (const item of tabNames) {
     const selected = item === name,
       tab = $("tab-" + item);
     tab.classList.toggle("active", selected);
@@ -24,16 +25,16 @@ function setTab(name, focus = false) {
   }
   if (focus) $("tab-" + name).focus();
 }
-const tabNames = ["lab", "explorer", "models"];
+const tabNames = ["lab", "explorer", "models", "research"];
 for (const name of tabNames) {
   $("tab-" + name).addEventListener("click", () => setTab(name));
   $("tab-" + name).addEventListener("keydown", (e) => {
     const idx = tabNames.indexOf(name);
     const next = {
-      ArrowRight: (idx + 1) % 3,
-      ArrowLeft: (idx + 2) % 3,
+      ArrowRight: (idx + 1) % tabNames.length,
+      ArrowLeft: (idx + tabNames.length - 1) % tabNames.length,
       Home: 0,
-      End: 2,
+      End: tabNames.length - 1,
     }[e.key];
     if (next !== undefined) {
       e.preventDefault();
@@ -375,6 +376,7 @@ function update() {
   }
 }
 function renderExplorer() {
+  renderStints(research, event);
   const duplicateGrid = event.quality.duplicateGridSlots;
   $("archive-quality").textContent =
     "Source-data check: " +
@@ -432,6 +434,7 @@ function renderExplorer() {
   );
 }
 function renderMetrics() {
+  renderCandidates(metrics);
   const names = {
     tyre_strategy: "Opening tyre sequence",
     positioning: "Finishing position",
@@ -507,14 +510,23 @@ function renderMetrics() {
 
 async function start() {
   const responses = await Promise.all(
-    ["./data/events.json", "./data/metrics.json"].map((path) => fetch(path)),
+    ["./data/events.json", "./data/metrics.json", "./data/research.json"].map(
+      (path) => fetch(path),
+    ),
   );
   if (responses.some((r) => !r.ok))
     throw new Error(
       "The archive could not load. Refresh the page or try again later.",
     );
-  [archive, metrics] = await Promise.all(responses.map((r) => r.json()));
-  if (!archive.events?.length || metrics.schema_version !== 2)
+  [archive, metrics, research] = await Promise.all(
+    responses.map((r) => r.json()),
+  );
+  if (
+    !archive.events?.length ||
+    metrics.schema_version !== 2 ||
+    research.schema_version !== 1 ||
+    !research.catalogue?.files?.length
+  )
     throw new Error("The data bundle is incomplete. Rebuild the demo export.");
   const options = archive.events
     .map(
@@ -534,6 +546,8 @@ async function start() {
     archive.events.find((e) => e.circuit === "bahrain") ?? archive.events[0];
   setEvent(initial.id);
   renderMetrics();
+  renderResearch(research);
+  $("view-evidence").addEventListener("click", () => setTab("research", true));
   let resizeTimer;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);

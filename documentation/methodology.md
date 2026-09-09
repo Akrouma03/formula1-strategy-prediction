@@ -14,7 +14,11 @@ Source snapshots cover 2014–2016. Circuit aliases map to explicit canonical ID
 “Australia” and “Australian Grand Prix” are one identity. The European Grand
 Prix label in this archive maps to Azerbaijan. This mapping is intentionally
 restricted to these seasons; it is not a universal historical event resolver.
-Event identity is season plus circuit. Driver IDs are trimmed but not guessed.
+Event identity is season plus circuit. Driver identity uses the explicit
+2014–2016 registry in `identities.py`; source `DriverId` values remain intact.
+Unknown names are visibly unmapped, never fuzzy-guessed. The pace join records
+all eligible keys and reports unmatched rows instead of silently dropping them.
+See [join reconciliation](data-case-study.md#a-reproducible-correction-driver-identity).
 
 Missing schema columns, unknown circuit names, out-of-scope years, duplicate
 driver/event records and duplicate lap keys fail explicitly. Non-numeric grid
@@ -57,6 +61,10 @@ forecast.
 4. Refit the selected method on 2014–2015.
 5. Evaluate on 2016. Keep the artifact trained only on development seasons.
 
+For transparent research comparison, the two other candidates are also refitted
+on the same development rows and evaluated on the same final-season rows.
+Those scores never change the validation-selected method.
+
 Random seed: 42. One-hot encoding tolerates previously unseen categories.
 Candidate settings are fixed in `models.py`; the test season never selects
 a candidate or supplies baseline lookup values. A regression test changes
@@ -91,10 +99,32 @@ unlike the driver-weighted headline. It is a descriptive small-sample interval,
 not a calibrated driver-level prediction interval or a guarantee about future
 seasons. No claim of statistically significant baseline improvement is made.
 
-Source SHA-256 hashes, dependency versions, seed, split counts, candidates and
+Source and pipeline SHA-256 hashes, dependency versions, seed, split counts, candidates and
 per-race results accompany each artifact/report. Partial retraining refuses to
 mix different source or dependency metadata. Export refuses incomplete or
-source-stale reports.
+source- or pipeline-stale reports. CI regenerates research and models, then
+checks that the committed browser data matches, ignoring runtime-version
+metadata and floating-point differences below 1e-9.
+
+## Measured stint study
+
+The explorer now shows descriptive, robust stint-pace slopes alongside the
+recorded stints. It requires exact recorded pit-boundary agreement and observed
+distance, dry conditions, valid contiguous stint definitions and six usable
+laps. First race laps and pit-adjacent laps are excluded. Compound spelling
+`Super Soft` is normalised to `Super soft` in this study only; the original
+classification labels and source CSVs are unchanged.
+
+Theil–Sen slope is the median pairwise change in time per lap of tyre age.
+It is robust to some isolated slow laps, but cannot distinguish fuel burn,
+traffic, safety cars, car/driver pace or tyre wear. The compound-median lookup
+is fitted on training stints, selected against zero drift on 2015, refitted on
+2014–2015 and assessed on 2016. Its worse final-season error does not justify
+promoting it to simulator coefficients. No physical wear calibration is claimed.
+
+The [case study](data-case-study.md#what-the-stint-study-found) documents the
+counts and findings; `reports/research.json` records every first-failing
+driver–race exclusion, short-stint count, compound summary and event summary.
 
 ## Strategy simulator
 

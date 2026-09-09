@@ -6,12 +6,12 @@ from pathlib import Path
 ROOT = Path(os.environ.get("F1_STRATEGY_ROOT", Path(__file__).resolve().parents[2])).resolve()
 
 DATA_DIR = ROOT / "data"
-RAW_DIR = DATA_DIR / "raw"
+CURATED_DIR = DATA_DIR / "curated"
 MODELS_DIR = ROOT / "models"
 REPORTS_DIR = ROOT / "reports"
 
-RACE_DATA = RAW_DIR / "race_data.csv"
-LAP_TIME_DATA = RAW_DIR / "lap_time_data.csv"
+RACE_DATA = CURATED_DIR / "race_data.csv"
+LAP_TIME_DATA = CURATED_DIR / "lap_time_data.csv"
 
 METRICS_JSON = REPORTS_DIR / "metrics.json"
 

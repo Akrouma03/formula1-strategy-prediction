@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 
 from .paths import LAP_TIME_DATA, RACE_DATA
+from .identities import driver_id
 
 STINT_COMPOUNDS = [f"Stint_Compound_{i}" for i in range(1, 7)]
 CONDITIONS = ("Dry", "Mix", "Wet")
@@ -81,6 +82,7 @@ def _identity(df: pd.DataFrame) -> pd.DataFrame:
     df["DriverId"] = df["DriverId"].astype(str).str.strip()
     if df["DriverId"].eq("").any():
         raise ValueError("Every row must have a driver ID.")
+    df["driver_id"] = df["DriverId"].map(driver_id)
     return df
 
 
@@ -101,7 +103,7 @@ def load_race_data(path: Path | str = RACE_DATA) -> pd.DataFrame:
         "Race data",
     )
     df = _identity(df)
-    if df.duplicated(["event_id", "DriverId"]).any():
+    if df.duplicated(["event_id", "driver_id"]).any():
         raise ValueError("Race data contains duplicate driver/event records.")
     df["positionStart"] = df["positionStart"].map(_position)
     df["positionFinish"] = df["positionFinish"].map(_position)
@@ -156,12 +158,12 @@ def load_laps(path: Path | str = LAP_TIME_DATA) -> pd.DataFrame:
     if not ((df["Lap"] > 0) & (df["Lap"] % 1 == 0)).all():
         raise ValueError("Lap numbers must be positive integers.")
     df["Lap"] = df["Lap"].astype(int)
-    if df.duplicated(["event_id", "DriverId", "Lap"]).any():
+    if df.duplicated(["event_id", "driver_id", "Lap"]).any():
         raise ValueError("Lap data contains duplicate driver/event/lap records.")
-    df = df.sort_values(["event_id", "DriverId", "Lap"]).reset_index(drop=True)
+    df = df.sort_values(["event_id", "driver_id", "Lap"]).reset_index(drop=True)
     df["time_seconds"] = df["Time"].map(lap_time_to_seconds)
     df["is_pit_lap"] = df["Pitstop"].notna() & df["Pitstop"].astype(str).str.strip().ne("")
-    group = df.groupby(["event_id", "DriverId"], sort=False)
+    group = df.groupby(["event_id", "driver_id"], sort=False)
     before = group["is_pit_lap"].shift(1, fill_value=False) & (df["Lap"] - group["Lap"].shift(1) == 1)
     after = group["is_pit_lap"].shift(-1, fill_value=False) & (group["Lap"].shift(-1) - df["Lap"] == 1)
     df["near_pit"] = df["is_pit_lap"] | before | after
@@ -173,21 +175,63 @@ def load_lap_time_data(
     race_path: Path | str = RACE_DATA,
 ) -> pd.DataFrame:
     """Join pit-filtered pace to actual grid position, never finishing position."""
+    return lap_time_data_with_audit(lap_path, race_path)[0]
+
+
+def lap_time_data_with_audit(
+    lap_path: Path | str = LAP_TIME_DATA,
+    race_path: Path | str = RACE_DATA,
+) -> tuple[pd.DataFrame, dict]:
+    """Return model rows and an explicit reconciliation of every eligible key."""
     laps = load_laps(lap_path)
     usable = laps[~laps["near_pit"] & laps["time_seconds"].notna()]
     summary = (
-        usable.groupby(["event_id", "DriverId"])
+        usable.groupby(["event_id", "driver_id"])
         .agg(
             avg_lap_time=("time_seconds", "mean"),
             laps=("Lap", "count"),
+            source_driver=("DriverId", "first"),
         )
         .reset_index()
     )
+    summary = summary[summary["laps"] >= 5].copy()
     races = load_race_data(race_path)
-    summary = summary.merge(
-        races[["event_id", "DriverId", "Year", "circuit_id", "raceName", "positionStart", "raceCondition"]],
-        on=["event_id", "DriverId"],
+    old_matches = summary.merge(
+        races[["event_id", "DriverId"]],
+        left_on=["event_id", "source_driver"],
+        right_on=["event_id", "DriverId"],
         how="inner",
         validate="one_to_one",
     )
-    return summary[summary["laps"] >= 5].reset_index(drop=True)
+    joined = summary.merge(
+        races[
+            [
+                "event_id",
+                "driver_id",
+                "DriverId",
+                "Year",
+                "circuit_id",
+                "raceName",
+                "positionStart",
+                "raceCondition",
+            ]
+        ],
+        on=["event_id", "driver_id"],
+        how="left",
+        validate="one_to_one",
+        indicator=True,
+    )
+    matched = joined[joined["_merge"].eq("both")].drop(columns="_merge").reset_index(drop=True)
+    unmatched = joined[joined["_merge"].eq("left_only")]
+    audit = {
+        "eligible_driver_races": len(summary),
+        "matched_driver_races": len(matched),
+        "previous_exact_name_matches": len(old_matches),
+        "recovered_by_aliases": len(matched) - len(old_matches),
+        "unmatched_records": unmatched[["event_id", "driver_id", "source_driver", "laps"]].to_dict("records"),
+        "unmapped_names": sorted(
+            set(laps.loc[laps.driver_id.str.startswith("unmapped:"), "DriverId"])
+            | set(races.loc[races.driver_id.str.startswith("unmapped:"), "DriverId"])
+        ),
+    }
+    return matched, audit

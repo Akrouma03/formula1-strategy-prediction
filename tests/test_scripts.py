@@ -98,7 +98,7 @@ def test_export_rejects_stale_report_before_writing(tmp_path, monkeypatch):
     monkeypatch.setattr(export, "METRICS_JSON", report)
     monkeypatch.setattr(export, "ROOT", tmp_path)
     with pytest.raises(SystemExit, match="source data changed"):
-        export.main()
+        export.main([])
     assert not (tmp_path / "docs").exists()
 
 

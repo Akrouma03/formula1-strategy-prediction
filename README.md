@@ -3,11 +3,12 @@
 An interactive pit-stop strategy sandbox, a historical race explorer, and a
 machine-learning evaluation that keeps entire seasons apart.
 
-Built by Akram from a final-year F1 project. The interesting question is not just
+I built this from my final-year F1 project. My focus is not just
 “which model scores highest?” but **what can these data actually support?**
 
 [Open the interactive demo](https://akrouma03.github.io/formula1-strategy-prediction/) ·
 [Methodology](documentation/methodology.md) ·
+[Data-cleaning case study](documentation/data-case-study.md) ·
 [Measured results](reports/metrics.json)
 
 ![Pit Window showing editable stint timelines, a cumulative time-gap chart and degradation sensitivity](docs/preview.png)
@@ -18,7 +19,7 @@ In the demo, change Strategy B’s first pit lap, move the degradation slider,
 then place a safety-car window over a stop. The cumulative gap shows when a
 strategy pays the cost of a stop and whether fresh tyres recover it.
 
-Three views keep different kinds of evidence separate:
+Four views keep different kinds of evidence separate:
 
 - **Strategy lab:** compare two editable one-/two-stop plans, change dry compounds,
   pit loss and degradation, inspect sensitivity, and export every simulated lap.
@@ -26,6 +27,8 @@ Three views keep different kinds of evidence separate:
   events in 2016. Missing records and detected source inconsistencies stay visible.
 - **Model report:** inspect chronological test results, useful baselines,
   unseen tyre labels and per-race uncertainty.
+- **Data & research:** see the manual-curation case study, recovered driver
+  matches, dataset versions, measured stint trends and experiment exclusions.
 
 The simulator is an illustrative single-car model, **not an optimiser or a
 current-F1 prediction service**. Its coefficients are editable assumptions,
@@ -42,7 +45,7 @@ is allowed to win.
 |---|---|---:|---:|---:|
 | First two observed stint compounds | Gradient Boosting | 22.3% accuracy | 20.4% | 431 |
 | Finish among classified drivers | Random Forest | 2.74-place MAE | 3.07 places | 382 |
-| Pit-filtered mean lap time | Circuit/condition baseline | 5.47-second MAE | 5.47 seconds | 332 |
+| Pit-filtered mean lap time | Circuit/condition baseline | 5.52-second MAE | 5.52 seconds | 373 |
 
 Lower MAE is better. Each task covers 21 test events. The tyre baseline uses the
 training-data mode for the circuit/conditions; pace uses the median; finishing
@@ -60,6 +63,28 @@ in both train and test, making the old numbers an unsuitable measure of
 future-race performance. The archive has been inspected during development;
 2016 is excluded from candidate selection, not claimed as a pristine blind
 benchmark. [Full protocol and limitations](documentation/methodology.md).
+
+## The data work
+
+I manually cleaned the original archive. I've kept two selected snapshots
+unchanged and added checks that make their limitations auditable:
+
+- **16 CSV files, 10 distinct byte contents:** a checksum-based catalogue
+  separates copies and feature exports from new observations; five private
+  workbooks are catalogued by metadata only.
+- **88 recovered driver–race matches:** explicit aliases replace brittle
+  exact-name joins. One conflicting source record remains excluded.
+- **2,078 analysed stints:** exact pit-boundary checks and robust within-stint
+  pace slopes. The selected compound lookup does not beat zero drift in 2016,
+  so the simulator remains illustrative rather than claiming fitted tyre wear.
+- **Honest model comparisons:** all RF/GB/baseline results are visible. Selected
+  old LSTM/GRU experiments are audited, not presented as valid benchmarks.
+
+The richer `F1_data.csv` has useful columns but no season identifier and 8,413
+exact duplicate rows. It is not silently merged into the historical dataset.
+In the [case study](documentation/data-case-study.md), I explain my original
+manual work, what I can verify from the files, and the automated checks I've
+added. I don't have a complete log of every historical manual edit.
 
 ## Run locally
 
@@ -87,13 +112,16 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 python scripts/train.py
 python scripts/predict.py --race Monaco --position 3 --condition Wet --json
+python scripts/build_research.py
 python scripts/export_demo.py
+python scripts/export_demo.py --check
 ```
 
 Training writes local, ignored `models/*.joblib` bundles and a versioned
 `reports/metrics.json`. Exporting refreshes the demo’s allowlisted JSON data.
-`--task positioning` retrains a single task without erasing the others; source
-or dependency changes require a full retrain.
+`--task positioning` retrains a single task without erasing the others; source,
+pipeline or dependency changes require a full retrain. Research generation
+needs only the two public curated files, not the private archive.
 
 Prediction deliberately supports **2016 historical scenarios only**. All three
 tasks use the same grid, canonical circuit ID and assumed conditions—never
@@ -136,7 +164,9 @@ documentation/     methodology and operational notes
 tests/             Python data, model and CLI regression tests
 tests-js/          simulator tests using Node's built-in runner
 tests-e2e/         real-browser behaviour and accessibility tests
-data/raw/          original coursework CSV snapshots (unchanged)
+data/curated/      selected manually curated CSV snapshots (unchanged bytes)
+data/catalogue.json  private archive metadata, versions and source evidence
+experiments/       comparable results and legacy experiment audit
 reports/           generated evaluation JSON, not the academic report
 ```
 
@@ -152,10 +182,10 @@ Car/team performance, traffic, overtaking, tyre inventory and sporting legality
 are outside the simulator. Finishing-position evaluation excludes non-numeric
 finish statuses and does not estimate retirement risk.
 
-A meaningful next version would add documented, licensed, richer timing data;
-reserve a genuinely new season; model retirement separately; and calibrate
-tyre degradation on clean stints before optimising pit windows. These are
-planned experiments, not implemented capabilities.
+A meaningful next version would recover provenance and season IDs for richer
+timing data, reserve a genuinely new season, model retirement separately and
+separate tyre wear from the confounders exposed by the completed stint study.
+Sequence modelling and pit-window optimisation remain next experiments.
 
 ## Data and license
 

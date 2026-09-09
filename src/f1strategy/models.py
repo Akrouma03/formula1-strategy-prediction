@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import platform
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -152,6 +153,14 @@ def train_task(task: str) -> tuple[dict[str, Any], dict[str, Any]]:
         else np.abs(prediction - test[target].to_numpy())
     )
     per_event = []
+    candidates_test = {"baseline": scores(test[target], baseline, task)}
+    for name in ("random_forest", "gradient_boosting"):
+        candidate = (
+            model
+            if selected == name
+            else build_pipeline(task, name).fit(development[FEATURES], development[target])
+        )
+        candidates_test[name] = scores(test[target], candidate.predict(test[FEATURES]), task)
     for event, indices in test.groupby("event_id").groups.items():
         loc = test.index.get_indexer(indices)
         per_event.append(
@@ -169,6 +178,7 @@ def train_task(task: str) -> tuple[dict[str, Any], dict[str, Any]]:
             "test": test.event_id.nunique(),
         },
         "validation": validation,
+        "candidates_test": candidates_test,
         "test": metrics,
         "baseline_test": scores(test[target], baseline, task),
         "event_mean_metric": float(pd.Series(errors, index=test.event_id).groupby(level=0).mean().mean()),
@@ -205,6 +215,10 @@ def metadata() -> dict[str, Any]:
         "source_sha256": {
             path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in (RACE_DATA, LAP_TIME_DATA)
         },
+        "pipeline_sha256": {
+            name: hashlib.sha256(Path(__file__).with_name(name).read_bytes()).hexdigest()
+            for name in ("data.py", "identities.py", "models.py")
+        },
     }
 
 
@@ -213,6 +227,9 @@ def predict(artifact: dict[str, Any], features: pd.DataFrame) -> np.ndarray:
         raise ValueError("Model format changed. Rebuild with python scripts/train.py.")
     if artifact["metadata"]["scikit_learn"] != sklearn.__version__:
         raise ValueError("Model dependency version differs. Rebuild in this environment.")
+    current = metadata()
+    if any(artifact["metadata"].get(key) != current[key] for key in ("source_sha256", "pipeline_sha256")):
+        raise ValueError("Model data or pipeline changed. Rebuild with python scripts/train.py.")
     return (
         baseline_predict(artifact["baseline_data"], features, artifact["task"])
         if artifact["pipeline"] is None

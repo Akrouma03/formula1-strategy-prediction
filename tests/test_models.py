@@ -80,6 +80,8 @@ def test_training_artifact_roundtrip_and_score_reproduction(task, datasets, tmp_
     artifact, report = models.train_task(task)
     _, _, test = models.split_seasons(datasets[task])
     assert report["selected"] == models.select_candidate(report["validation"], task)
+    assert set(report["candidates_test"]) == {"baseline", "random_forest", "gradient_boosting"}
+    assert report["candidates_test"][report["selected"]] == report["test"]
     assert artifact["metadata"]["training_seasons"] == [2014, 2015]
     assert report["rows"]["test_2016"] == len(test)
     path = tmp_path / "model.joblib"

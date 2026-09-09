@@ -31,7 +31,7 @@ test("all views are keyboard-operable, responsive and pass WCAG AA automated che
   page,
 }) => {
   await page.locator("#tab-lab").focus();
-  for (const name of ["lab", "explorer", "models"]) {
+  for (const name of ["lab", "explorer", "models", "research"]) {
     await expect(page.locator("#tab-" + name)).toBeFocused();
     await expect(page.locator("#tab-" + name)).toHaveAttribute(
       "aria-selected",
@@ -73,6 +73,32 @@ test("archive exposes real rows and source-quality warnings; metrics match expor
     .getByText("Per-race test results and uncertainty", { exact: true })
     .click();
   await expect(page.locator("#per-race-report table")).toHaveCount(3);
+  await page
+    .getByText("Compare every candidate on the same seasons", { exact: true })
+    .click();
+  await expect(page.locator("#candidate-results table")).toHaveCount(3);
+});
+
+test("research exposes reconciliation, excluded data and measured event stints", async ({
+  page,
+}) => {
+  const data = await (await page.request.get("/data/research.json")).json();
+  await page.locator("#tab-research").click();
+  await expect(page.locator("#join-evidence")).toContainText(
+    "+" + data.quality.joins.recovered_by_aliases,
+  );
+  await expect(page.locator("#richer-summary")).toContainText(
+    "no season column",
+  );
+  await expect(page.locator("#legacy-experiments tbody tr")).toHaveCount(3);
+  await page.locator("#tab-explorer").click();
+  await expect(page.locator("#stint-study-table tbody tr")).toHaveCount(
+    data.stints.events["2016:bahrain"].length,
+  );
+  await page.locator("#explore-event").selectOption("2016:monaco");
+  await expect(page.locator("#stint-study-table")).toContainText(
+    "No stints meet",
+  );
 });
 
 test("CSV download contains complete per-lap data", async ({ page }) => {

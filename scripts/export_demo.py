@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import argparse
+import hashlib
+import math
 import sys
 from pathlib import Path
 
@@ -12,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from f1strategy.data import STINT_COMPOUNDS, load_lap_time_data, load_laps, load_race_data  # noqa: E402
 from f1strategy.models import TASKS, metadata  # noqa: E402
 from f1strategy.paths import METRICS_JSON, ROOT  # noqa: E402
+from f1strategy.identities import driver_name  # noqa: E402
 
 
 def build_demo() -> dict:
@@ -39,7 +43,7 @@ def build_demo() -> dict:
                     )
             drivers.append(
                 {
-                    "id": row.DriverId,
+                    "id": driver_name(row.driver_id, row.DriverId),
                     "grid": int(row.positionStart) if pd.notna(row.positionStart) else None,
                     "finish": int(row.positionFinish) if pd.notna(row.positionFinish) else None,
                     "stints": stints,
@@ -79,7 +83,22 @@ def build_demo() -> dict:
     }
 
 
-def main() -> int:
+def equivalent(left, right) -> bool:
+    """Compare generated content, tolerating floating-point/platform metadata differences."""
+    if isinstance(left, dict) and isinstance(right, dict):
+        keys = set(left) - {"metadata"}
+        return keys == set(right) - {"metadata"} and all(equivalent(left[k], right[k]) for k in keys)
+    if isinstance(left, list) and isinstance(right, list):
+        return len(left) == len(right) and all(equivalent(a, b) for a, b in zip(left, right))
+    if isinstance(left, (int, float)) and isinstance(right, (int, float)):
+        return math.isclose(left, right, rel_tol=1e-9, abs_tol=1e-9)
+    return left == right
+
+
+def main(argv=None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Check committed demo output without writing it")
+    args = parser.parse_args(argv)
     if not METRICS_JSON.exists():
         raise SystemExit("Run scripts/train.py before exporting the model report.")
     report = json.loads(METRICS_JSON.read_text(encoding="utf-8"))
@@ -87,15 +106,46 @@ def main() -> int:
         raise SystemExit("Rebuild all models: the report is missing tasks or has an old format.")
     if report.get("metadata", {}).get("source_sha256") != metadata()["source_sha256"]:
         raise SystemExit("The source data changed. Retrain before exporting.")
+    if report.get("metadata", {}).get("pipeline_sha256") != metadata()["pipeline_sha256"]:
+        raise SystemExit("The pipeline changed. Retrain before exporting.")
+    research_path = ROOT / "reports" / "research.json"
+    if not research_path.exists():
+        raise SystemExit("Run scripts/build_research.py before exporting.")
+    research = json.loads(research_path.read_text(encoding="utf-8"))
+    if research.get("schema_version") != 1 or any(
+        research.get("metadata", {}).get(key) != metadata()[key]
+        for key in ("source_sha256", "pipeline_sha256")
+    ):
+        raise SystemExit("Rebuild stale research with scripts/build_research.py.")
+    expected_hashes = {
+        name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
+        for name in ("src/f1strategy/stints.py", "scripts/build_research.py")
+    }
+    if research.get("research_sha256") != expected_hashes:
+        raise SystemExit("Research code changed. Run scripts/build_research.py.")
+    research["catalogue"] = json.loads((ROOT / "data" / "catalogue.json").read_text(encoding="utf-8"))
     output = ROOT / "docs" / "data"
+    payloads = {"events.json": build_demo(), "metrics.json": report, "research.json": research}
+    if args.check:
+        for name, payload in payloads.items():
+            path = output / name
+            if not path.exists() or not equivalent(json.loads(path.read_text(encoding="utf-8")), payload):
+                raise SystemExit(
+                    f"Stale demo content: {name}. Run scripts/export_demo.py and commit the export."
+                )
+        print("Committed demo content matches regenerated results.")
+        return 0
     output.mkdir(parents=True, exist_ok=True)
     output.joinpath("events.json").write_text(
-        json.dumps(build_demo(), indent=2, allow_nan=False) + "\n", encoding="utf-8"
+        json.dumps(payloads["events.json"], indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
     output.joinpath("metrics.json").write_text(
         json.dumps(report, indent=2, allow_nan=False) + "\n", encoding="utf-8"
     )
-    print("Exported historical events and chronological evaluation to docs/data/.")
+    output.joinpath("research.json").write_text(
+        json.dumps(research, indent=2, allow_nan=False) + "\n", encoding="utf-8"
+    )
+    print("Exported historical events, measured evaluation and data research to docs/data/.")
     return 0
 
 
