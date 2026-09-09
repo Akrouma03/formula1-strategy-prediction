@@ -117,7 +117,7 @@ test("CSV download contains complete per-lap data", async ({ page }) => {
 test("bundle failure has an actionable error and does not expose a broken workspace", async ({
   page,
 }) => {
-  await page.route("**/data/events.json", (route) =>
+  await page.route("**/data/events.json*", (route) =>
     route.fulfill({ status: 503, body: "Unavailable" }),
   );
   await page.reload();
@@ -140,4 +140,19 @@ test("demo has no third-party runtime requests or console errors", async ({
   await page.locator("#safety-lap").selectOption("17");
   expect(errors).toEqual([]);
   expect(external).toEqual([]);
+});
+
+test("release loads without relying on stale unversioned entrypoints or data", async ({
+  page,
+}) => {
+  const staleRequests = [];
+  await page.route(/\/(app\.js|style\.css|data\/.*\.json)$/, (route) => {
+    staleRequests.push(route.request().url());
+    return route.fulfill({ status: 410, body: "Previous release" });
+  });
+  await page.reload();
+  await expect(page.locator("#workspace")).toBeVisible();
+  await page.getByRole("tab", { name: "Data & research" }).click();
+  await expect(page.locator(".join-counts")).toContainText("+88");
+  expect(staleRequests).toEqual([]);
 });

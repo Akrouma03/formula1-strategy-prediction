@@ -511,7 +511,7 @@ function renderMetrics() {
 async function start() {
   const responses = await Promise.all(
     ["./data/events.json", "./data/metrics.json", "./data/research.json"].map(
-      (path) => fetch(path),
+      (path) => fetch(path + "?v=2.1.0"),
     ),
   );
   if (responses.some((r) => !r.ok))

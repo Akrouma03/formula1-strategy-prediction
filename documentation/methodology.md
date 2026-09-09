@@ -175,6 +175,11 @@ Python exports an explicit field allowlist for the archive and measured report;
 browsers do not load joblib, raw CSVs, credentials or academic documents.
 No external fonts, libraries, analytics or API requests run in the page.
 
+The HTML entrypoints and fetched JSON use a release query (`v=2.1.0`) to avoid
+mixing cached scripts/data with a newer page. Bump the query in `index.html`
+and `app.js` together when releasing changed browser assets or data. The
+browser suite checks that the app works when unversioned resources are unavailable.
+
 Start with `python -m http.server 8000 --directory docs`.
 For deployment, choose **GitHub Actions** in the repository's Pages settings.
 The CI workflow publishes only `docs/`, only from `main`, and only after
